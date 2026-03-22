@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: codelens-backend
+    env: node
+    region: oregon
+    buildCommand: npm install
+    startCommand: node src/app.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: GROQ_API_KEY
+        sync: false   # Set manually in Render dashboard

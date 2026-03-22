@@ -1,0 +1,45 @@
+
+# ── Web framework ─────────────────────────────────────────────────────────────
+fastapi==0.111.0
+uvicorn[standard]==0.29.0
+starlette==0.37.2
+
+# ── LangChain 0.3.x stack (all share langchain-core 0.3.x — zero conflict) ───
+langchain==0.3.25
+langchain-community==0.3.25
+langchain-groq==0.2.5
+langchain-text-splitters==0.3.11
+langchain-core==0.3.83
+
+# ── Groq SDK (pulled in by langchain-groq, pinned for stability) ─────────────
+groq==0.13.0
+
+# ── LangSmith (required by langchain-core) ────────────────────────────────────
+langsmith==0.3.45
+
+# ── Vector store ──────────────────────────────────────────────────────────────
+faiss-cpu==1.8.0
+
+# ── Embeddings ────────────────────────────────────────────────────────────────
+sentence-transformers==2.7.0
+torch==2.2.2
+transformers==4.40.2
+huggingface-hub==0.23.2
+tokenizers==0.19.1
+
+# ── Pydantic (langchain 0.3.x requires >=2.7.4) ───────────────────────────────
+pydantic==2.7.4
+pydantic-settings==2.4.0
+
+# ── HTTP / async ──────────────────────────────────────────────────────────────
+httpx==0.27.0
+httpx-sse==0.4.0
+aiohttp==3.9.5
+anyio==4.4.0
+
+# ── Data utilities ────────────────────────────────────────────────────────────
+numpy==1.26.4
+dataclasses-json==0.6.7
+
+# ── Config ────────────────────────────────────────────────────────────────────
+python-dotenv==1.0.1

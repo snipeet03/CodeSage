@@ -1,0 +1,9 @@
+[project]
+name = "codebase-explainer-rag"
+version = "1.0.0"
+description = "RAG service for Smart Codebase Explainer"
+requires-python = "==3.10.*"
+
+[tool.pip]
+# All packages in requirements.txt are pinned for Python 3.10 compatibility.
+# Do NOT upgrade without testing on Python 3.10 first.

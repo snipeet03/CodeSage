@@ -1,0 +1,38 @@
+# Node
+node_modules/
+npm-debug.log*
+.npm
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.venv/
+venv/
+env/
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+
+# Repos cloned at runtime
+backend/repos/
+
+# FAISS indexes (generated at runtime)
+rag-service/faiss_indexes/
+
+# Environment files
+.env
+!.env.example
+
+# Build output
+frontend/dist/
+frontend/.vite/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+*.swp

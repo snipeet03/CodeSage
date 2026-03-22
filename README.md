@@ -1,4 +1,3 @@
-# 🧠 Smart Codebase Explainer
 # 🧠 CodeSage — AI Codebase Intelligence System
 
 CodeSage is a production-grade **AI-powered codebase understanding system** that helps developers analyze, navigate, and understand large repositories using **Retrieval-Augmented Generation (RAG)**.

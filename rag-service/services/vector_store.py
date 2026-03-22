@@ -94,8 +94,17 @@ class VectorStoreService:
 
     @staticmethod
     def get_active_store() -> FAISS:
-        """Return the currently active in-memory vector store."""
+        """Return the currently active in-memory vector store, or try to auto-load if missing."""
+        global _vector_store, _current_repo
+        
         if _vector_store is None:
+            # Attempt to auto-load if only one index exists in the directory
+            if os.path.isdir(FAISS_INDEX_DIR):
+                indexes = os.listdir(FAISS_INDEX_DIR)
+                if len(indexes) == 1:
+                    logger.info(f"[VectorStore] Auto-loading detected index: {indexes[0]}")
+                    return VectorStoreService.load(indexes[0])
+                    
             raise RuntimeError(
                 "No repository is indexed yet. "
                 "Please submit a GitHub URL to index first."

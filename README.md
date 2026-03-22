@@ -1,5 +1,35 @@
 # 🧠 Smart Codebase Explainer
+# 🧠 CodeSage — AI Codebase Intelligence System
 
+CodeSage is a production-grade **AI-powered codebase understanding system** that helps developers analyze, navigate, and understand large repositories using **Retrieval-Augmented Generation (RAG)**.
+
+Instead of manually reading thousands of lines of code, developers can ask natural language questions and get **structured, context-aware explanations**.
+
+---
+
+# ✨ Features
+
+- 🔍 **Repository Ingestion**
+  - Clone and process any public GitHub repository
+
+- 🧠 **AI-Powered Code Understanding**
+  - Ask questions like:
+    - “How does authentication work?”
+    - “Where is API routing handled?”
+
+- 📚 **RAG-Based Retrieval**
+  - Context-aware answers using embeddings + vector search
+
+- ⚡ **Fast LLM Inference**
+  - Powered by Groq (LLaMA3 / Mixtral)
+
+- 🧩 **Microservice Architecture**
+  - Node.js + Python (LangChain) based scalable system
+
+- 💬 **Interactive Chat UI**
+  - Simple interface for querying repositories
+
+---
 A production-grade **Code Intelligence System** built with a microservice architecture:
 - **React (Vite)** frontend
 - **Node.js (Express)** API gateway

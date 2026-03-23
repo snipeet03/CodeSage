@@ -46,9 +46,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# ── Routers ─────────────────────────────────────────────────────────────────
-app.include_router(index_router.router, prefix="", tags=["Indexing"])
-app.include_router(query_router.router, prefix="", tags=["Query"])
+app.include_router(index_router, prefix="", tags=["Indexing"])
+app.include_router(query_router, prefix="", tags=["Query"])
 
 
 # ── Health check ─────────────────────────────────────────────────────────────

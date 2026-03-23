@@ -6,10 +6,10 @@ Uses strict prompt engineering to avoid hallucination.
 
 import os
 import logging
-from typing import Optional, Tuple
-from langchain.schema import Document
+from typing import Optional, Tuple, List
+from langchain_core.documents import Document
+from langchain_core.messages import HumanMessage, SystemMessage
 from langchain_groq import ChatGroq
-from langchain.schema import HumanMessage, SystemMessage
 
 logger = logging.getLogger(__name__)
 
@@ -29,7 +29,7 @@ Rules you MUST follow:
 6. Never hallucinate library names, function signatures, or behavior not shown in the code."""
 
 
-def _build_context(chunks: list[Document]) -> tuple[str, list[str]]:
+def _build_context(chunks: List[Document]) -> Tuple[str, List[str]]:
     """
     Assemble a structured context string from retrieved chunks.
     Returns the context string and a list of source file paths.
@@ -59,23 +59,21 @@ class LLMService:
     @classmethod
     def _get_client(cls) -> ChatGroq:
         if cls._client is None:
-            api_key = os.getenv("GROQ_API_KEY", "")
-            model = os.getenv("GROQ_MODEL", "llama3-70b-8192")
-            if not api_key:
+            if not GROQ_API_KEY:
                 raise EnvironmentError(
                     "GROQ_API_KEY is not set. Add it to your .env file."
                 )
             cls._client = ChatGroq(
-                groq_api_key=api_key,
-                model_name=model,
+                groq_api_key=GROQ_API_KEY,
+                model_name=GROQ_MODEL,
                 temperature=0.1,   # Low temp = more factual, less creative
                 max_tokens=2048,
             )
-            logger.info(f"[LLM] Groq client initialized with model: {model}")
+            logger.info(f"[LLM] Groq client initialized with model: {GROQ_MODEL}")
         return cls._client
 
     @classmethod
-    def answer(cls, question: str, chunks: list) -> Tuple[str, list]:
+    def answer(cls, question: str, chunks: List[Document]) -> Tuple[str, List[str]]:
         """
         Build a grounded prompt and query Groq LLM.
         Returns the answer string and list of source files used.

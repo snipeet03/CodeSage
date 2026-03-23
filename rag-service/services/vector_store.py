@@ -2,12 +2,13 @@
 services/vector_store.py
 Manages FAISS vector store creation and persistence.
 Uses HuggingFace sentence-transformers for embeddings.
+Compatible with langchain==0.3.x + langchain-community==0.3.x
 """
 
 import os
 import logging
-from typing import Optional
-from langchain.schema import Document
+from typing import Optional, List
+from langchain_core.documents import Document
 from langchain_community.vectorstores import FAISS
 from langchain_community.embeddings import HuggingFaceEmbeddings
 
@@ -41,12 +42,12 @@ class VectorStoreService:
     """Handles FAISS index creation, persistence, and loading."""
 
     @staticmethod
-    def preload_embeddings():
+    def preload_embeddings() -> None:
         """Called at startup to warm up the embedding model."""
         _get_embeddings()
 
     @staticmethod
-    def build_and_save(chunks: list[Document], repo_name: str) -> None:
+    def build_and_save(chunks: List[Document], repo_name: str) -> None:
         """
         Embed all chunks and save the FAISS index to disk.
         Also keeps a reference in memory for fast querying.
@@ -94,17 +95,8 @@ class VectorStoreService:
 
     @staticmethod
     def get_active_store() -> FAISS:
-        """Return the currently active in-memory vector store, or try to auto-load if missing."""
-        global _vector_store, _current_repo
-        
+        """Return the currently active in-memory vector store."""
         if _vector_store is None:
-            # Attempt to auto-load if only one index exists in the directory
-            if os.path.isdir(FAISS_INDEX_DIR):
-                indexes = os.listdir(FAISS_INDEX_DIR)
-                if len(indexes) == 1:
-                    logger.info(f"[VectorStore] Auto-loading detected index: {indexes[0]}")
-                    return VectorStoreService.load(indexes[0])
-                    
             raise RuntimeError(
                 "No repository is indexed yet. "
                 "Please submit a GitHub URL to index first."

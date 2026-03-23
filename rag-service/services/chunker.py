@@ -6,8 +6,9 @@ with language-specific separators. This avoids random mid-function splits.
 
 import os
 import logging
-from langchain.schema import Document
-from langchain.text_splitter import RecursiveCharacterTextSplitter, Language
+from typing import List
+from langchain_core.documents import Document
+from langchain_text_splitters import RecursiveCharacterTextSplitter, Language
 
 logger = logging.getLogger(__name__)
 
@@ -59,12 +60,12 @@ class ChunkerService:
     """Splits LangChain Documents into smaller, code-aware chunks."""
 
     @staticmethod
-    def chunk_documents(documents: list[Document]) -> list[Document]:
+    def chunk_documents(documents: List[Document]) -> List[Document]:
         """
         For each document, apply the appropriate language-aware splitter.
         Preserves and enriches metadata (source file, chunk index).
         """
-        all_chunks: list[Document] = []
+        all_chunks: List[Document] = []
 
         for doc in documents:
             ext = doc.metadata.get("extension", "")

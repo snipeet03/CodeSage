@@ -5,7 +5,8 @@ Retrieves top-K relevant code chunks from FAISS for a given query.
 
 import os
 import logging
-from langchain.schema import Document
+from typing import List
+from langchain_core.documents import Document
 from services.vector_store import VectorStoreService
 
 logger = logging.getLogger(__name__)
@@ -17,7 +18,7 @@ class RetrieverService:
     """Handles similarity search against the active FAISS vector store."""
 
     @staticmethod
-    def retrieve(question: str) -> list[Document]:
+    def retrieve(question: str) -> List[Document]:
         """
         Perform similarity search and return top-K relevant chunks.
         """

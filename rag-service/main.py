@@ -9,9 +9,6 @@ from contextlib import asynccontextmanager
 import uvicorn
 import logging
 
-from dotenv import load_dotenv
-load_dotenv()
-
 from routers import index_router, query_router
 from services.vector_store import VectorStoreService
 
@@ -50,8 +47,8 @@ app.add_middleware(
 )
 
 # ── Routers ─────────────────────────────────────────────────────────────────
-app.include_router(index_router, prefix="", tags=["Indexing"])
-app.include_router(query_router, prefix="", tags=["Query"])
+app.include_router(index_router.router, prefix="", tags=["Indexing"])
+app.include_router(query_router.router, prefix="", tags=["Query"])
 
 
 # ── Health check ─────────────────────────────────────────────────────────────

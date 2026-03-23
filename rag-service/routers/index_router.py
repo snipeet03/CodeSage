@@ -5,6 +5,7 @@ POST /index — receives a repo path, loads files, chunks, embeds, stores in FAI
 
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
+from typing import List
 import logging
 
 from services.file_loader import FileLoaderService

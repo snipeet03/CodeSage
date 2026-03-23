@@ -1,3 +1,19 @@
+# =============================================================================
+# requirements.txt — Smart Codebase Explainer (RAG Service)
+# Python 3.10.x REQUIRED
+#
+# Install:
+#   python3.10 -m venv .venv
+#   .venv\Scripts\activate        (Windows)
+#   source .venv/bin/activate     (Mac / Linux)
+#   pip install --upgrade pip
+#   pip install -r requirements.txt
+#
+# Root cause of previous conflict:
+#   langchain 0.2.x + langchain-groq 0.1.x required DIFFERENT langchain-core
+#   versions and could not coexist. Fixed by upgrading ALL to the 0.3.x track
+#   which shares a single langchain-core >=0.3.x requirement.
+# =============================================================================
 
 # ── Web framework ─────────────────────────────────────────────────────────────
 fastapi==0.111.0
@@ -29,7 +45,7 @@ tokenizers==0.19.1
 
 # ── Pydantic (langchain 0.3.x requires >=2.7.4) ───────────────────────────────
 pydantic==2.7.4
-pydantic-settings==2.4.0
+pydantic-settings==2.3.4
 
 # ── HTTP / async ──────────────────────────────────────────────────────────────
 httpx==0.27.0

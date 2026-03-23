@@ -1,13 +1,953 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Codebase Explainer</title>
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧠</text></svg>" />
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.jsx"></script>
-  </body>
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>codesage — the open source AI code explainer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/marked/9.1.6/marked.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark-dimmed.min.css"/>
+<style>
+/* ─────────────────────────────────────
+   RESET & ROOT
+───────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --black:    #0a0a0a;
+  --black2:   #101010;
+  --black3:   #161616;
+  --border:   #1e1e1e;
+  --border2:  #2a2a2a;
+  --dim:      #444444;
+  --muted:    #777777;
+  --text:     #bbbbbb;
+  --white:    #eeeeee;
+  --green:    #22c55e;
+  --mono:     'IBM Plex Mono', monospace;
+  --side-w:   220px;   /* fixed sidebar column width */
+  --content-w: 680px;  /* max width of centered content */
+}
+
+html, body {
+  height: 100%;
+  font-family: var(--mono);
+  background: var(--black);
+  color: var(--text);
+  -webkit-font-smoothing: antialiased;
+}
+button { font-family: var(--mono); cursor: pointer; }
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+
+/* ─────────────────────────────────────
+   NAVBAR  —  logo left · Free right
+   Side panels continue the border lines
+───────────────────────────────────── */
+.nav {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 200;
+  display: flex; align-items: stretch;
+  height: 52px;
+  border-bottom: 1px solid var(--border);
+  background: var(--black);
+}
+
+/* dark side panels in nav */
+.nav-side {
+  width: var(--side-w);
+  flex-shrink: 0;
+  background: var(--black2);
+}
+.nav-side.left  { border-right: 1px solid var(--border); }
+.nav-side.right { border-left:  1px solid var(--border); }
+
+/* center strip of nav holds logo + cta */
+.nav-center {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 2rem;
+}
+
+.nav-logo {
+  font-size: 1.05rem; font-weight: 700;
+  color: var(--white); letter-spacing: -0.03em;
+}
+.nav-logo .dim { color: var(--dim); }
+
+.nav-cta {
+  display: flex; align-items: center; gap: 0.4rem;
+  background: var(--white); color: var(--black);
+  border: none; font-size: 0.73rem; font-weight: 700;
+  padding: 0.36rem 0.9rem; letter-spacing: 0.04em;
+  transition: background 0.15s;
+}
+.nav-cta:hover { background: #d0d0d0; }
+
+/* ─────────────────────────────────────
+   THREE-COLUMN BORDER LAYOUT
+   Left dark column | center | right dark column
+   Continuous vertical border lines
+───────────────────────────────────── */
+.page-shell {
+  display: flex;
+  min-height: 100vh;
+  padding-top: 52px; /* offset for fixed nav */
+}
+
+.side-col {
+  width: var(--side-w);
+  flex-shrink: 0;
+  background: var(--black2);
+}
+.side-col.left  { border-right: 1px solid var(--border); }
+.side-col.right { border-left:  1px solid var(--border); }
+
+.center-col {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;      /* ← horizontally centers all children */
+}
+
+/* ─────────────────────────────────────
+   HERO SECTION  —  centered
+───────────────────────────────────── */
+.hero {
+  width: 100%;
+  max-width: var(--content-w);
+  padding: 5rem 2rem 4rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;       /* center everything inside hero */
+  text-align: center;
+}
+
+.hero-eyebrow {
+  font-size: 0.65rem;
+  color: var(--dim);
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  margin-bottom: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+.hero-eyebrow::before,
+.hero-eyebrow::after {
+  content: '';
+  display: block;
+  width: 28px; height: 1px;
+  background: var(--border2);
+}
+
+.hero-title {
+  font-size: clamp(2rem, 4.5vw, 3.2rem);
+  font-weight: 700;
+  color: var(--white);
+  line-height: 1.08;
+  letter-spacing: -0.04em;
+  margin-bottom: 1.25rem;
+}
+
+.hero-sub {
+  font-size: 0.83rem;
+  color: var(--muted);
+  line-height: 1.8;
+  max-width: 480px;
+  margin-bottom: 3rem;
+}
+
+/* ─────────────────────────────────────
+   STEP BADGE
+───────────────────────────────────── */
+.step-row {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  margin-bottom: 0.9rem;
+  align-self: flex-start;  /* left-align step label above widget */
+  width: 100%;
+  max-width: 560px;
+}
+.step-badge {
+  font-size: 0.6rem; font-weight: 700;
+  background: var(--white); color: var(--black);
+  padding: 0.12rem 0.45rem; letter-spacing: 0.1em;
+  text-transform: uppercase; flex-shrink: 0;
+}
+.step-desc {
+  font-size: 0.7rem; color: var(--dim); letter-spacing: 0.02em;
+}
+
+/* ─────────────────────────────────────
+   REPO INPUT WIDGET
+───────────────────────────────────── */
+.widget {
+  width: 100%;
+  max-width: 560px;
+  border: 1px solid var(--border2);
+  margin-bottom: 0.75rem;
+}
+
+.widget-tab-bar {
+  display: flex;
+  border-bottom: 1px solid var(--border2);
+  padding: 0 1rem;
+}
+.wtab {
+  background: none; border: none;
+  color: var(--dim); font-size: 0.74rem;
+  padding: 0.55rem 0.75rem;
+  position: relative; transition: color 0.15s;
+  letter-spacing: 0.01em;
+}
+.wtab.active { color: var(--white); }
+.wtab.active::after {
+  content: ''; position: absolute;
+  bottom: -1px; left: 0; right: 0;
+  height: 1px; background: var(--white);
+}
+
+.widget-body {
+  display: flex; align-items: stretch;
+}
+.url-input {
+  flex: 1; background: none; border: none;
+  color: var(--white); font-family: var(--mono);
+  font-size: 0.8rem; padding: 0.85rem 1rem;
+  outline: none; min-width: 0; letter-spacing: 0.01em;
+}
+.url-input::placeholder { color: var(--dim); }
+.url-input:disabled { opacity: 0.3; }
+
+.load-btn {
+  background: var(--white); color: var(--black);
+  border: none; border-left: 1px solid var(--border2);
+  font-size: 0.71rem; font-weight: 700;
+  padding: 0 1.3rem; letter-spacing: 0.06em;
+  display: flex; align-items: center; gap: 0.4rem;
+  flex-shrink: 0; white-space: nowrap;
+  transition: background 0.15s;
+}
+.load-btn:hover:not(:disabled) { background: #d0d0d0; }
+.load-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+
+/* Progress log inside widget */
+.prog-log {
+  display: none; flex-direction: column; gap: 0.3rem;
+  padding: 0.8rem 1rem;
+  border-top: 1px solid var(--border);
+  background: var(--black2);
+}
+.prog-log.show { display: flex; }
+.log-line {
+  font-size: 0.71rem; color: var(--dim);
+  display: flex; align-items: center; gap: 0.5rem;
+  transition: color 0.2s;
+}
+.log-line .pfx { color: var(--border2); transition: color 0.2s; }
+.log-line.active { color: var(--text); }
+.log-line.active .pfx { color: var(--white); }
+.log-line.done { color: var(--green); }
+.log-line.done .pfx { color: var(--green); }
+
+/* Error */
+.err-msg {
+  display: none; font-size: 0.71rem; color: #ef4444;
+  margin-top: 0.5rem; width: 100%; max-width: 560px;
+  line-height: 1.55; text-align: left;
+}
+.err-msg.show { display: block; }
+
+/* Hint text below input */
+.input-hint {
+  font-size: 0.67rem; color: var(--dim);
+  width: 100%; max-width: 560px;
+  line-height: 1.6; text-align: left;
+  margin-bottom: 2.5rem;
+}
+
+/* ─────────────────────────────────────
+   POWERED-BY STRIP
+───────────────────────────────────── */
+.powered-strip {
+  display: flex; flex-wrap: wrap;
+  align-items: center; justify-content: center;
+  gap: 0.45rem 0.9rem;
+  width: 100%; max-width: 560px;
+  padding: 1rem 0;
+  border-top: 1px solid var(--border);
+}
+.pw-label {
+  font-size: 0.6rem; color: var(--dim);
+  letter-spacing: 0.12em; text-transform: uppercase;
+  width: 100%; text-align: center;
+  margin-bottom: 0.35rem;
+}
+.pw-item {
+  font-size: 0.7rem; color: var(--muted); letter-spacing: 0.01em;
+}
+.pw-item .pw-sub {
+  font-size: 0.63rem; color: var(--dim); margin-left: 0.2rem;
+}
+.pw-sep { color: var(--border2); }
+
+/* ─────────────────────────────────────
+   BIG WORDMARK SECTION (bottom)
+───────────────────────────────────── */
+.wordmark-section {
+  width: 100%;
+  border-top: 1px solid var(--border);
+  background: var(--black2);
+  display: flex;
+}
+.wordmark-side {
+  width: var(--side-w);
+  flex-shrink: 0;
+  background: var(--black3);
+}
+.wordmark-side.left  { border-right: 1px solid var(--border); }
+.wordmark-side.right { border-left:  1px solid var(--border); }
+.wordmark-center {
+  flex: 1;
+  padding: 3rem 2rem 2.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  overflow: hidden;
+}
+.wordmark-tagline {
+  font-size: 0.67rem; color: var(--dim);
+  letter-spacing: 0.15em; text-transform: uppercase;
+  margin-bottom: 1.25rem;
+}
+.wordmark {
+  font-size: clamp(3.5rem, 11vw, 9rem);
+  font-weight: 700; letter-spacing: -0.06em;
+  line-height: 1; user-select: none;
+}
+.wordmark .a { color: var(--border2); }
+.wordmark .b { color: transparent; -webkit-text-stroke: 1px var(--border2); }
+.wordmark .c { color: var(--dim); }
+
+/* ─────────────────────────────────────
+   SPINNER
+───────────────────────────────────── */
+.spin {
+  width: 11px; height: 11px;
+  border: 1.5px solid rgba(0,0,0,0.15);
+  border-top-color: #000;
+  border-radius: 50%;
+  animation: spin .6s linear infinite;
+  display: inline-block; flex-shrink: 0;
+}
+.spin-w {
+  width: 11px; height: 11px;
+  border: 1.5px solid rgba(255,255,255,0.15);
+  border-top-color: var(--white);
+  border-radius: 50%;
+  animation: spin .6s linear infinite;
+  display: inline-block; flex-shrink: 0;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ═══════════════════════════════════════
+   CHAT PAGE
+═══════════════════════════════════════ */
+#page-chat {
+  display: none; position: fixed; inset: 0;
+  flex-direction: column; background: var(--black); z-index: 300;
+}
+#page-chat.show { display: flex; }
+
+/* Chat nav */
+.chat-nav {
+  display: flex; align-items: stretch;
+  height: 52px; border-bottom: 1px solid var(--border);
+  background: var(--black); flex-shrink: 0;
+}
+.chat-nav-side {
+  width: var(--side-w); flex-shrink: 0;
+  background: var(--black2);
+  display: flex; align-items: center; padding: 0 1rem;
+}
+.chat-nav-side.left  { border-right: 1px solid var(--border); }
+.chat-nav-side.right { border-left:  1px solid var(--border); justify-content: flex-end; }
+.back-btn {
+  background: none; border: none; color: var(--muted);
+  font-size: 0.74rem; cursor: pointer; transition: color 0.15s;
+  display: flex; align-items: center; gap: 0.35rem;
+}
+.back-btn:hover { color: var(--white); }
+.chat-nav-center {
+  flex: 1; display: flex; align-items: center;
+  justify-content: space-between; padding: 0 1.5rem;
+}
+.repo-pill {
+  display: flex; align-items: center; gap: 0.45rem;
+  font-size: 0.72rem; color: var(--muted);
+  border: 1px solid var(--border2); padding: 0.2rem 0.6rem;
+}
+.repo-pill .dot {
+  width: 5px; height: 5px; border-radius: 50%;
+  background: var(--green); animation: blink 2s ease infinite;
+}
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:.25} }
+.chat-stats { font-size: 0.67rem; color: var(--dim); }
+
+/* Chat body */
+.chat-body { display: flex; flex: 1; overflow: hidden; }
+
+/* Sidebar */
+.chat-sidebar {
+  width: var(--side-w); flex-shrink: 0;
+  border-right: 1px solid var(--border);
+  background: var(--black2);
+  display: flex; flex-direction: column; overflow: hidden;
+}
+.sb-head {
+  padding: 0.65rem 1rem;
+  font-size: 0.6rem; color: var(--dim);
+  letter-spacing: 0.1em; text-transform: uppercase;
+  border-bottom: 1px solid var(--border);
+}
+.sb-list { flex: 1; overflow-y: auto; }
+.sb-btn {
+  display: block; width: 100%; background: none;
+  border: none; border-bottom: 1px solid var(--border);
+  color: var(--muted); text-align: left;
+  font-size: 0.69rem; padding: 0.6rem 1rem;
+  cursor: pointer; transition: all .15s; line-height: 1.45;
+}
+.sb-btn::before { content: '→ '; color: var(--border2); }
+.sb-btn:hover { background: var(--black3); color: var(--white); }
+.sb-btn:hover::before { color: var(--white); }
+.sb-foot {
+  padding: 0.65rem 0.85rem;
+  border-top: 1px solid var(--border);
+}
+.new-btn {
+  width: 100%; background: none;
+  border: 1px solid var(--border2);
+  color: var(--dim); font-size: 0.68rem;
+  padding: 0.45rem; cursor: pointer;
+  transition: all .15s; letter-spacing: 0.03em;
+}
+.new-btn:hover { border-color: var(--muted); color: var(--white); }
+
+/* Messages area */
+.chat-main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+.msgs { flex: 1; overflow-y: auto; }
+
+.msg-row {
+  display: flex; border-bottom: 1px solid var(--border);
+  animation: fi .2s ease both;
+}
+@keyframes fi { from{opacity:0;transform:translateY(4px)} to{opacity:1;transform:none} }
+
+.msg-gutter {
+  width: 54px; flex-shrink: 0;
+  padding: 0.9rem 0 0.9rem 1.25rem;
+  border-right: 1px solid var(--border);
+  font-size: 0.58rem; font-weight: 700;
+  letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--border2);
+}
+.msg-row.user .msg-gutter { color: var(--white); }
+.msg-row.bot  .msg-gutter { color: var(--green); }
+.msg-row.err  .msg-gutter { color: #ef4444; }
+
+.msg-body {
+  flex: 1; padding: 0.9rem 1.5rem;
+  font-size: 0.8rem; line-height: 1.7;
+  color: var(--text); min-width: 0;
+}
+.msg-row.user .msg-body { color: var(--white); }
+.msg-row.err  .msg-body { color: #ef4444; }
+
+/* Markdown */
+.msg-body h1,.msg-body h2,.msg-body h3 {
+  font-size: 0.83rem; font-weight: 700;
+  color: var(--white); margin: .7rem 0 .3rem;
+  letter-spacing: -.01em;
+}
+.msg-body h1:first-child,.msg-body h2:first-child,.msg-body h3:first-child { margin-top: 0; }
+.msg-body p { margin-bottom: .45rem; }
+.msg-body p:last-child { margin-bottom: 0; }
+.msg-body ul,.msg-body ol { padding-left: 1.2rem; margin-bottom: .45rem; }
+.msg-body li { margin-bottom: .15rem; }
+.msg-body strong { color: var(--white); font-weight: 600; }
+.msg-body code {
+  background: var(--black3); border: 1px solid var(--border2);
+  font-size: .77em; padding: .08em .35em; color: var(--text);
+}
+.msg-body pre {
+  background: var(--black2); border: 1px solid var(--border);
+  padding: .9rem 1rem; overflow-x: auto; margin: .5rem 0; font-size: .76rem;
+}
+.msg-body pre code { background: none; border: none; padding: 0; font-size: inherit; }
+.msg-body blockquote {
+  border-left: 2px solid var(--border2); padding-left: .7rem;
+  color: var(--muted); margin: .4rem 0;
+}
+.msg-body hr { border: none; border-top: 1px solid var(--border); margin: .65rem 0; }
+
+/* Sources */
+.sources {
+  margin-top: .6rem; padding-top: .6rem;
+  border-top: 1px dashed var(--border);
+  display: flex; flex-wrap: wrap; align-items: center; gap: .35rem;
+}
+.src-lbl {
+  font-size: .58rem; color: var(--dim);
+  letter-spacing: .1em; text-transform: uppercase; margin-right: .2rem;
+}
+.src-chip {
+  font-size: .63rem; color: var(--muted);
+  border: 1px solid var(--border); padding: .08rem .4rem;
+}
+
+/* Typing */
+.typing-row { display: flex; border-bottom: 1px solid var(--border); animation: fi .2s ease both; }
+.typing-gutter {
+  width: 54px; flex-shrink: 0; padding: .9rem 0 .9rem 1.25rem;
+  border-right: 1px solid var(--border); display: flex; align-items: center;
+}
+.t-dots { display: flex; gap: 3px; }
+.t-dots span {
+  width: 4px; height: 4px; background: var(--dim);
+  border-radius: 50%; animation: td 1.1s ease-in-out infinite;
+}
+.t-dots span:nth-child(2){ animation-delay:.14s; }
+.t-dots span:nth-child(3){ animation-delay:.28s; }
+@keyframes td { 0%,80%,100%{transform:translateY(0);opacity:.4} 40%{transform:translateY(-4px);opacity:1} }
+.typing-body { padding: .9rem 1.5rem; font-size: .7rem; color: var(--dim); }
+
+/* Input bar */
+.input-bar { border-top: 1px solid var(--border); display: flex; align-items: stretch; flex-shrink: 0; }
+.input-gutter {
+  width: 54px; flex-shrink: 0; border-right: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  font-size: .75rem; color: var(--dim);
+}
+.chat-in {
+  flex: 1; background: none; border: none;
+  color: var(--white); font-family: var(--mono);
+  font-size: .8rem; padding: .85rem 1rem;
+  resize: none; outline: none; line-height: 1.5;
+  min-height: 48px; max-height: 130px; overflow-y: auto;
+}
+.chat-in::placeholder { color: var(--dim); }
+.chat-in:disabled { opacity: .3; }
+.send-btn {
+  background: var(--white); color: var(--black);
+  border: none; border-left: 1px solid var(--border2);
+  font-size: .7rem; font-weight: 700; padding: 0 1.2rem;
+  cursor: pointer; transition: background .15s;
+  letter-spacing: .06em;
+  display: flex; align-items: center; gap: .35rem; flex-shrink: 0;
+}
+.send-btn:hover:not(:disabled) { background: #d0d0d0; }
+.send-btn:disabled { opacity: .3; cursor: not-allowed; }
+
+/* ─────────────────────────────────────
+   RESPONSIVE
+───────────────────────────────────── */
+@media (max-width: 720px) {
+  :root { --side-w: 0px; }
+  .nav-side, .side-col, .wordmark-side,
+  .chat-nav-side, .chat-sidebar { display: none; }
+  .hero { padding: 4rem 1.25rem 3rem; }
+  .wordmark-center { padding: 2rem 1.25rem; }
+  .chat-nav-center { padding: 0 1rem; }
+}
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════
+     NAV
+══════════════════════════════════════ -->
+<nav class="nav">
+  <div class="nav-side left"></div>
+  <div class="nav-center">
+    <div class="nav-logo"><span class="dim">code</span>sage</div>
+    <button class="nav-cta">
+      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 17 12 21 16 17"/><line x1="12" y1="3" x2="12" y2="21"/></svg>
+      Free
+    </button>
+  </div>
+  <div class="nav-side right"></div>
+</nav>
+
+<!-- ══════════════════════════════════════
+     LANDING PAGE
+══════════════════════════════════════ -->
+<div id="page-landing">
+
+  <!-- Three-column shell -->
+  <div class="page-shell">
+    <div class="side-col left"></div>
+
+    <!-- CENTER COLUMN — all content centered here -->
+    <div class="center-col">
+
+      <section class="hero">
+
+        <!-- Eyebrow -->
+        <div class="hero-eyebrow">AI · RAG · FAISS · Groq LLaMA 3</div>
+
+        <!-- Title -->
+        <h1 class="hero-title">
+          The open source AI<br/>code explainer
+        </h1>
+
+        <!-- Subtitle -->
+        <p class="hero-sub">
+          Paste any public GitHub repository URL. The system clones it,
+          indexes every source file using RAG + FAISS, and lets you ask
+          natural language questions — grounded in the actual code.
+        </p>
+
+        <!-- Step 01 -->
+        <div class="step-row">
+          <span class="step-badge">step 01</span>
+          <span class="step-desc">paste a github repository url to get started</span>
+        </div>
+
+        <!-- Input widget -->
+        <div class="widget">
+          <div class="widget-tab-bar">
+            <button class="wtab active">github url</button>
+          </div>
+          <div class="widget-body">
+            <input
+              id="repo-url"
+              class="url-input"
+              type="url"
+              placeholder="https://github.com/owner/repository"
+              autocomplete="off"
+              spellcheck="false"
+            />
+            <button class="load-btn" id="load-btn" onclick="handleLoad()">
+              <span id="load-txt">Load Repo</span>
+              <span id="load-spin" class="spin" style="display:none"></span>
+            </button>
+          </div>
+          <!-- Progress log -->
+          <div class="prog-log" id="prog-log">
+            <div class="log-line" id="l-clone"><span class="pfx">$</span>&nbsp;cloning repository…</div>
+            <div class="log-line" id="l-parse"><span class="pfx">$</span>&nbsp;loading &amp; chunking source files…</div>
+            <div class="log-line" id="l-embed"><span class="pfx">$</span>&nbsp;generating embeddings (all-MiniLM-L6-v2)…</div>
+            <div class="log-line" id="l-faiss"><span class="pfx">$</span>&nbsp;building FAISS index…</div>
+            <div class="log-line" id="l-done" ><span class="pfx">$</span>&nbsp;ready.</div>
+          </div>
+        </div>
+
+        <!-- Error -->
+        <div class="err-msg" id="err-msg"></div>
+
+        <!-- Hint -->
+        <p class="input-hint">
+          supports any public github repo &nbsp;·&nbsp; press enter or click load repo
+        </p>
+
+        <!-- Step 02 -->
+        <div class="step-row">
+          <span class="step-badge">step 02</span>
+          <span class="step-desc">once indexed, ask anything about the code in plain english</span>
+        </div>
+
+        <!-- Powered-by -->
+        <div class="powered-strip">
+          <span class="pw-label">powered by</span>
+          <span class="pw-item">HuggingFace <span class="pw-sub">all-MiniLM-L6-v2</span></span>
+          <span class="pw-sep">·</span>
+          <span class="pw-item">FAISS <span class="pw-sub">vector store</span></span>
+          <span class="pw-sep">·</span>
+          <span class="pw-item">Groq <span class="pw-sub">llama-3-70b</span></span>
+          <span class="pw-sep">·</span>
+          <span class="pw-item">LangChain <span class="pw-sub">RAG pipeline</span></span>
+          <span class="pw-sep">·</span>
+          <span class="pw-item">Node.js <span class="pw-sub">API gateway</span></span>
+        </div>
+
+      </section>
+
+    </div><!-- /center-col -->
+
+    <div class="side-col right"></div>
+  </div><!-- /page-shell -->
+
+  <!-- Big wordmark (full-width, bottom) -->
+  <div class="wordmark-section">
+    <div class="wordmark-side left"></div>
+    <div class="wordmark-center">
+      <p class="wordmark-tagline">understand any codebase in minutes, not days</p>
+      <div class="wordmark">
+        <span class="a">code</span><span class="b">sa</span><span class="c">ge</span>
+      </div>
+    </div>
+    <div class="wordmark-side right"></div>
+  </div>
+
+</div><!-- /page-landing -->
+
+<!-- ══════════════════════════════════════
+     CHAT PAGE
+══════════════════════════════════════ -->
+<div id="page-chat">
+
+  <!-- Chat nav -->
+  <div class="chat-nav">
+    <div class="chat-nav-side left">
+      <button class="back-btn" onclick="goBack()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+        back
+      </button>
+    </div>
+    <div class="chat-nav-center">
+      <div class="repo-pill">
+        <span class="dot"></span>
+        <span id="nav-repo">—</span>
+      </div>
+      <div class="chat-stats" id="nav-stats"></div>
+    </div>
+    <div class="chat-nav-side right"></div>
+  </div>
+
+  <!-- Chat body -->
+  <div class="chat-body">
+
+    <!-- Sidebar -->
+    <div class="chat-sidebar">
+      <div class="sb-head">// suggested queries</div>
+      <div class="sb-list">
+        <button class="sb-btn" onclick="useSugg(this)">what is the overall architecture?</button>
+        <button class="sb-btn" onclick="useSugg(this)">how is authentication handled?</button>
+        <button class="sb-btn" onclick="useSugg(this)">what are the main entry points?</button>
+        <button class="sb-btn" onclick="useSugg(this)">explain the data flow end-to-end</button>
+        <button class="sb-btn" onclick="useSugg(this)">what dependencies are used?</button>
+        <button class="sb-btn" onclick="useSugg(this)">how is error handling implemented?</button>
+        <button class="sb-btn" onclick="useSugg(this)">describe the database schema</button>
+      </div>
+      <div class="sb-foot">
+        <button class="new-btn" onclick="goBack()">← new repository</button>
+      </div>
+    </div>
+
+    <!-- Messages + input -->
+    <div class="chat-main">
+      <div class="msgs" id="msgs"></div>
+      <div class="input-bar">
+        <div class="input-gutter">&gt;</div>
+        <textarea id="chat-in" class="chat-in" placeholder="ask anything about the codebase…" rows="1"></textarea>
+        <button class="send-btn" id="send-btn" onclick="sendMsg()">
+          <span id="send-txt">SEND</span>
+          <span id="send-spin" class="spin" style="display:none"></span>
+        </button>
+      </div>
+    </div>
+
+  </div>
+</div><!-- /page-chat -->
+
+<!-- ══════════════════════════════════════
+     JAVASCRIPT
+══════════════════════════════════════ -->
+<script>
+const API = 'http://localhost:3001/api';
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+/* marked setup */
+marked.setOptions({ breaks: true, gfm: true });
+const rdr = new marked.Renderer();
+rdr.code = (c, l) => {
+  const lang = hljs.getLanguage(l) ? l : 'plaintext';
+  return `<pre><code class="hljs">${hljs.highlight(c, { language: lang }).value}</code></pre>`;
+};
+marked.use({ renderer: rdr });
+
+let busy = false;
+let repo = { name: '', files: 0, chunks: 0 };
+
+/* helpers */
+function setLog(id, st) { document.getElementById('l-' + id).className = 'log-line ' + st; }
+function showErr(m) { const e = document.getElementById('err-msg'); e.textContent = '✗ ' + m; e.classList.add('show'); }
+function hideErr() { document.getElementById('err-msg').classList.remove('show'); }
+function showLog() { document.getElementById('prog-log').classList.add('show'); }
+function hideLog() { document.getElementById('prog-log').classList.remove('show'); }
+
+/* load repo */
+async function handleLoad() {
+  const url = document.getElementById('repo-url').value.trim();
+  if (!url || busy) return;
+  hideErr(); hideLog(); busy = true;
+
+  document.getElementById('repo-url').disabled = true;
+  document.getElementById('load-btn').disabled = true;
+  document.getElementById('load-txt').style.display = 'none';
+  document.getElementById('load-spin').style.display = 'inline-block';
+
+  showLog(); setLog('clone', 'active');
+
+  const t1 = setTimeout(() => { setLog('clone','done'); setLog('parse','active'); }, 2500);
+  const t2 = setTimeout(() => { setLog('parse','done'); setLog('embed','active'); }, 5500);
+  const t3 = setTimeout(() => { setLog('embed','done'); setLog('faiss','active'); }, 9000);
+
+  try {
+    const res = await fetch(`${API}/repo/load`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ repoUrl: url })
+    });
+    clearTimeout(t1); clearTimeout(t2); clearTimeout(t3);
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
+
+    ['clone','parse','embed','faiss'].forEach(s => setLog(s, 'done'));
+    setLog('done', 'active');
+    await sleep(500); setLog('done', 'done'); await sleep(350);
+
+    repo = {
+      name: data.repoName || url.split('/').pop().replace('.git', ''),
+      files: data.indexStatus?.files_loaded ?? '?',
+      chunks: data.indexStatus?.chunks_created ?? '?',
+    };
+    openChat();
+  } catch (e) {
+    clearTimeout(t1); clearTimeout(t2); clearTimeout(t3);
+    hideLog(); showErr(e.message || 'Failed — is the backend running on :3001?');
+  } finally {
+    busy = false;
+    document.getElementById('repo-url').disabled = false;
+    document.getElementById('load-btn').disabled = false;
+    document.getElementById('load-txt').style.display = 'inline';
+    document.getElementById('load-spin').style.display = 'none';
+  }
+}
+
+document.getElementById('repo-url').addEventListener('keydown', e => {
+  if (e.key === 'Enter') handleLoad();
+});
+
+/* screen switch */
+function openChat() {
+  document.getElementById('nav-repo').textContent = repo.name;
+  document.getElementById('nav-stats').textContent = `${repo.files} files · ${repo.chunks} chunks`;
+  document.getElementById('page-landing').style.display = 'none';
+  document.getElementById('page-chat').classList.add('show');
+  appendMsg('bot', `**${repo.name}** indexed — ${repo.files} files, ${repo.chunks} chunks in FAISS.\n\nAsk me anything about the codebase.`, []);
+  document.getElementById('chat-in').focus();
+}
+
+function goBack() {
+  document.getElementById('page-chat').classList.remove('show');
+  document.getElementById('page-landing').style.display = 'flex';
+  document.getElementById('msgs').innerHTML = '';
+  document.getElementById('repo-url').value = '';
+  hideLog(); hideErr();
+}
+
+/* chat messages */
+function appendMsg(role, content, sources) {
+  const area = document.getElementById('msgs');
+  const row = document.createElement('div');
+  row.className = 'msg-row ' + (role === 'assistant' ? 'bot' : role);
+
+  const gu = document.createElement('div');
+  gu.className = 'msg-gutter';
+  gu.textContent = role === 'assistant' ? 'AI' : role === 'user' ? 'YOU' : 'ERR';
+
+  const bd = document.createElement('div');
+  bd.className = 'msg-body';
+
+  if (role === 'user' || role === 'error') {
+    bd.textContent = content;
+  } else {
+    bd.innerHTML = marked.parse(content);
+    if (sources && sources.length) {
+      const s = document.createElement('div');
+      s.className = 'sources';
+      s.innerHTML = `<span class="src-lbl">sources</span>` + sources.map(x => `<span class="src-chip">${x}</span>`).join('');
+      bd.appendChild(s);
+    }
+  }
+
+  row.appendChild(gu); row.appendChild(bd);
+  area.appendChild(row);
+  area.scrollTop = area.scrollHeight;
+}
+
+function showTyping() {
+  const area = document.getElementById('msgs');
+  const r = document.createElement('div');
+  r.className = 'typing-row'; r.id = 'typing';
+  r.innerHTML = `<div class="typing-gutter"><div class="t-dots"><span></span><span></span><span></span></div></div><div class="typing-body">generating…</div>`;
+  area.appendChild(r); area.scrollTop = area.scrollHeight;
+}
+function hideTyping() { const e = document.getElementById('typing'); if (e) e.remove(); }
+
+function setSendBusy(on) {
+  busy = on;
+  document.getElementById('chat-in').disabled = on;
+  document.getElementById('send-btn').disabled = on;
+  document.getElementById('send-txt').style.display = on ? 'none' : 'inline';
+  document.getElementById('send-spin').style.display = on ? 'inline-block' : 'none';
+}
+
+async function sendMsg() {
+  const ta = document.getElementById('chat-in');
+  const q = ta.value.trim();
+  if (!q || busy) return;
+  ta.value = ''; ta.style.height = 'auto';
+  appendMsg('user', q, []);
+  setSendBusy(true); showTyping();
+  try {
+    const res = await fetch(`${API}/query`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ question: q })
+    });
+    const data = await res.json();
+    hideTyping();
+    if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
+    appendMsg('assistant', data.answer || '_(empty)_', data.sources || []);
+  } catch (e) {
+    hideTyping();
+    appendMsg('error', e.message || 'Request failed.', []);
+  } finally {
+    setSendBusy(false);
+    document.getElementById('chat-in').focus();
+  }
+}
+
+document.getElementById('chat-in').addEventListener('input', function () {
+  this.style.height = 'auto';
+  this.style.height = Math.min(this.scrollHeight, 130) + 'px';
+});
+document.getElementById('chat-in').addEventListener('keydown', e => {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMsg(); }
+});
+
+function useSugg(btn) {
+  const ta = document.getElementById('chat-in');
+  ta.value = btn.textContent.replace('→ ', '').trim();
+  ta.style.height = 'auto';
+  ta.style.height = Math.min(ta.scrollHeight, 130) + 'px';
+  ta.focus();
+}
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && document.getElementById('page-chat').classList.contains('show')) goBack();
+});
+</script>
+</body>
 </html>

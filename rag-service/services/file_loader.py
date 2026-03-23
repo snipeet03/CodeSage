@@ -6,7 +6,8 @@ Skips irrelevant directories (node_modules, .git, __pycache__, etc.)
 
 import os
 import logging
-from langchain.schema import Document
+from typing import List
+from langchain_core.documents import Document
 
 logger = logging.getLogger(__name__)
 
@@ -48,12 +49,12 @@ class FileLoaderService:
     """Loads source code files from a repository path into LangChain Documents."""
 
     @staticmethod
-    def load_repo(repo_path: str) -> list[Document]:
+    def load_repo(repo_path: str) -> List[Document]:
         """
         Walk the repo directory, read all supported files,
         and return a list of LangChain Document objects with metadata.
         """
-        documents: list[Document] = []
+        documents: List[Document] = []
         repo_path = os.path.abspath(repo_path)
 
         if not os.path.isdir(repo_path):

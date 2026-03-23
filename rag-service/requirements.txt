@@ -44,8 +44,8 @@ huggingface-hub==0.23.2
 tokenizers==0.19.1
 
 # ── Pydantic (langchain 0.3.x requires >=2.7.4) ───────────────────────────────
-pydantic==2.7.4
-pydantic-settings==2.3.4
+pydantic>=2.7.4
+pydantic-settings>=2.4.0
 
 # ── HTTP / async ──────────────────────────────────────────────────────────────
 httpx==0.27.0

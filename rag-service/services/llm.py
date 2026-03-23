@@ -1,6 +1,6 @@
 """
 services/llm.py
-Constructs a prompt from retrieved code chunks and calls the Groq LLM.
+Constructs a prompt from retrieved code chunks and calls the Ollama LLM.
 Uses strict prompt engineering to avoid hallucination.
 """
 
@@ -9,12 +9,11 @@ import logging
 from typing import Optional, Tuple, List
 from langchain_core.documents import Document
 from langchain_core.messages import HumanMessage, SystemMessage
-from langchain_groq import ChatGroq
+from langchain_community.chat_models import ChatOllama
 
 logger = logging.getLogger(__name__)
 
-GROQ_API_KEY = os.getenv("GROQ_API_KEY", "")
-GROQ_MODEL = os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile")
+OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "llama3")
 
 # System prompt enforces grounded, structured answers
 SYSTEM_PROMPT = """You are a senior software engineer and code reviewer.
@@ -52,30 +51,24 @@ def _build_context(chunks: List[Document]) -> Tuple[str, List[str]]:
 
 
 class LLMService:
-    """Handles context construction and Groq LLM invocation."""
+    """Handles context construction and Ollama LLM invocation."""
 
-    _client: Optional[ChatGroq] = None
+    _client: Optional[ChatOllama] = None
 
     @classmethod
-    def _get_client(cls) -> ChatGroq:
+    def _get_client(cls) -> ChatOllama:
         if cls._client is None:
-            if not GROQ_API_KEY:
-                raise EnvironmentError(
-                    "GROQ_API_KEY is not set. Add it to your .env file."
-                )
-            cls._client = ChatGroq(
-                groq_api_key=GROQ_API_KEY,
-                model_name=GROQ_MODEL,
+            cls._client = ChatOllama(
+                model=OLLAMA_MODEL,
                 temperature=0.1,   # Low temp = more factual, less creative
-                max_tokens=2048,
             )
-            logger.info(f"[LLM] Groq client initialized with model: {GROQ_MODEL}")
+            logger.info(f"[LLM] Ollama client initialized with model: {OLLAMA_MODEL}")
         return cls._client
 
     @classmethod
     def answer(cls, question: str, chunks: List[Document]) -> Tuple[str, List[str]]:
         """
-        Build a grounded prompt and query Groq LLM.
+        Build a grounded prompt and query Ollama.
         Returns the answer string and list of source files used.
         """
         context, sources = _build_context(chunks)
@@ -91,7 +84,7 @@ class LLMService:
             HumanMessage(content=user_message),
         ]
 
-        logger.info(f"[LLM] Sending prompt to Groq. Sources: {sources}")
+        logger.info(f"[LLM] Sending prompt to Ollama. Sources: {sources}")
         client = cls._get_client()
         response = client.invoke(messages)
 

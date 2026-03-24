@@ -1,6 +1,6 @@
 {
   "rewrites": [
-    { "source": "/api/:path*", "destination": "https://codesage-r66z.onrender.com/api/:path*" }
+    { "source": "/api/:path*", "destination": "https://codesage-r66z.onrender.com" }
   ],
   "buildCommand": "npm run build",
   "outputDirectory": "dist",

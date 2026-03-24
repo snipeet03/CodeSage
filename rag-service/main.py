@@ -3,12 +3,13 @@ main.py — FastAPI application entry point for the RAG service.
 Exposes /index and /query endpoints.
 """
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 import uvicorn
 import logging
 import os
+import threading
 
 from routers import index_router, query_router
 from services.vector_store import VectorStoreService
@@ -24,11 +25,22 @@ logger = logging.getLogger(__name__)
 # ── App lifespan (startup / shutdown) ──────────────────────────────────────
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    logger.info("RAG Service starting up...")
-    # Pre-load embedding model so first request is fast
-    VectorStoreService.preload_embeddings()
+    logger.info("🚀 RAG Service starting up...")
+
+    # ✅ NON-BLOCKING: Load embeddings in background
+    def load_embeddings():
+        try:
+            logger.info("🔄 Loading embeddings in background...")
+            VectorStoreService.preload_embeddings()
+            logger.info("✅ Embeddings loaded successfully")
+        except Exception as e:
+            logger.error(f"❌ Error loading embeddings: {e}")
+
+    threading.Thread(target=load_embeddings, daemon=True).start()
+
     yield
-    logger.info("RAG Service shutting down.")
+
+    logger.info("🛑 RAG Service shutting down.")
 
 
 # ── FastAPI instance ────────────────────────────────────────────────────────
@@ -42,7 +54,7 @@ app = FastAPI(
 # ── CORS ────────────────────────────────────────────────────────────────────
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["*"],   # 🔥 change this in production if needed
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -58,17 +70,14 @@ async def health():
     return {"status": "ok", "service": "rag-service"}
 
 
-# ── Run server ─────────────────────────────────────────────────────────────
+# ── Entry point (ONLY for local dev) ────────────────────────────────────────
 if __name__ == "__main__":
-    # 👇 CRITICAL FIX
     port = int(os.environ.get("PORT", 8000))
-
-    # 👇 Disable reload in production automatically
     is_dev = os.environ.get("ENV", "dev") == "dev"
 
     uvicorn.run(
         "main:app",
         host="0.0.0.0",
         port=port,
-        reload=is_dev   # reload ONLY in local dev
+        reload=is_dev   # ✅ reload only locally
     )

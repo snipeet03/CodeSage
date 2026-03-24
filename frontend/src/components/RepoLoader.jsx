@@ -40,8 +40,16 @@ export default function RepoLoader({ onIndexed }) {
         headers: { 'Content-Type': 'application/json' },
         body:    JSON.stringify({ repoUrl: url }),
       })
+      if (!r1.ok) {
+        const text = await r1.text();
+        try {
+          const json = JSON.parse(text);
+          throw new Error(json.error || `Server error: ${r1.status}`);
+        } catch(e) {
+          throw new Error(`Server returned an error (${r1.status}). Please try again in 30 seconds (backend may be waking up).`);
+        }
+      }
       const d1 = await r1.json()
-      if (!r1.ok) throw new Error(d1.error)
       addLog(`✓ Cloned ${d1.repo.repo} (${d1.repo.fileCount} files found)`)
 
       // ── Phase 2: Index ────────────────────────────────────────────
@@ -55,8 +63,16 @@ export default function RepoLoader({ onIndexed }) {
         headers: { 'Content-Type': 'application/json' },
         body:    JSON.stringify({ repoUrl: url }),
       })
+      if (!r2.ok) {
+        const text2 = await r2.text();
+        try {
+          const json2 = JSON.parse(text2);
+          throw new Error(json2.error || `Server error: ${r2.status}`);
+        } catch(e) {
+          throw new Error(`Server returned an error (${r2.status}). Please try again.`);
+        }
+      }
       const d2 = await r2.json()
-      if (!r2.ok) throw new Error(d2.error)
 
       addLog(`✓ Indexed ${d2.stats.filesProcessed} files → ${d2.stats.totalChunks} chunks`)
       setPhase('done')

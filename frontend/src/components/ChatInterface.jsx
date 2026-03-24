@@ -4,50 +4,59 @@ import remarkGfm from 'remark-gfm'
 import SourcePanel from './SourcePanel.jsx'
 
 const SUGGESTED = [
-  'What is the overall architecture of this codebase?',
-  'What are the main entry points?',
-  'How is error handling implemented?',
-  'What dependencies or external libraries are used?',
-  'How is authentication handled?',
-  'What is the data flow for a typical request?',
+    'What is the overall architecture of this codebase?',
+    'What are the main entry points?',
+    'How is error handling implemented?',
+    'What dependencies or external libraries are used?',
+    'How is authentication handled?',
+    'What is the data flow for a typical request?',
 ]
 
 export default function ChatInterface() {
-  const [messages, setMessages] = useState([
-    {
-      role: 'assistant',
-      content:
-        "I've analyzed the codebase and I'm ready to answer your questions.\n\nYou can ask me about:\n- **Architecture** — how files and modules relate\n- **Data flow** — how a request travels through the system\n- **Functions** — what a specific function does\n- **Patterns** — design patterns used\n- **Dependencies** — what external packages are used and why",
-      sources: [],
-    },
-  ])
-  const [input,   setInput]   = useState('')
-  const [loading, setLoading] = useState(false)
-  const [sources, setSources] = useState([])
-  const bottomRef = useRef(null)
+    const [messages, setMessages] = useState([
+        {
+            role: 'assistant',
+            content:
+                "I've analyzed the codebase and I'm ready to answer your questions.\n\nYou can ask me about:\n- **Architecture** — how files and modules relate\n- **Data flow** — how a request travels through the system\n- **Functions** — what a specific function does\n- **Patterns** — design patterns used\n- **Dependencies** — what external packages are used and why",
+            sources: [],
+        },
+    ])
+    const [input, setInput] = useState('')
+    const [loading, setLoading] = useState(false)
+    const [sources, setSources] = useState([])
+    const bottomRef = useRef(null)
 
-  useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [messages, loading])
+    useEffect(() => {
+        bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
+    }, [messages, loading])
 
-  const sendMessage = async (text) => {
-    const question = (text || input).trim()
-    if (!question || loading) return
-    setInput('')
+    const sendMessage = async (text) => {
+        const question = (text || input).trim()
+        if (!question || loading) return
+        setInput('')
 
-    // Append user message
-    setMessages(prev => [...prev, { role: 'user', content: question, sources: [] }])
-    setLoading(true)
+        // Append user message
+        setMessages(prev => [...prev, { role: 'user', content: question, sources: [] }])
+        setLoading(true)
 
-    try {
-      const res  = await fetch('/api/query', {
-        method:  'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({ question }),
-      })
+        try {
+            const res = await fetch('/api/query', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ question }),
+            })
+
+            if (!res.ok) {
+                const text = await res.text();
+                try {
+                    const json = JSON.parse(text);
+                    throw new Error(json.error || `Server error: ${res.status}`);
+        } catch(e) {
+          throw new Error(`Server returned an error (${res.status}). Please try again in 30 seconds if the backend is waking up.`);
+        }
+      }
+      
       const data = await res.json()
-
-      if (!res.ok) throw new Error(data.error || 'Server error')
 
       const msgSources = data.sources || []
       setSources(msgSources)
@@ -66,7 +75,7 @@ export default function ChatInterface() {
         ...prev,
         {
           role:    'assistant',
-          content: `**Error:** ${e.message}\n\nPlease check that the backend is running and a repo is indexed.`,
+          content: `** Error:** ${ e.message }\n\nPlease check that the backend is running and a repo is indexed.`,
           sources: [],
         },
       ])
@@ -139,7 +148,7 @@ export default function ChatInterface() {
 function Message({ message }) {
   const isUser = message.role === 'user'
   return (
-    <div className={`message ${isUser ? 'message-user' : 'message-assistant'}`}>
+    <div className={`message ${ isUser? 'message-user': 'message-assistant' }`}>
       <div className="message-avatar">
         {isUser ? '👤' : '⚡'}
       </div>

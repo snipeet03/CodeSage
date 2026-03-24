@@ -2,10 +2,11 @@
   "name": "codebase-explainer-backend",
   "version": "1.0.0",
   "description": "Node.js API layer for Smart Codebase Explainer",
-  "main": "server.js",
+  "main": "src/app.js",
+  "type": "module",
   "scripts": {
-    "start": "node server.js",
-    "dev": "nodemon server.js"
+    "start": "node src/app.js",
+    "dev": "nodemon src/app.js"
   },
   "dependencies": {
     "axios": "^1.6.0",

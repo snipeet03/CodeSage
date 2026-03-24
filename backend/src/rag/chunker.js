@@ -4,15 +4,15 @@ import Groq from "groq-sdk";
 let _groq = null;
 
 const getGroq = () => {
-  if (!_groq) {
-    if (!process.env.GROQ_API_KEY) {
-      throw new Error(
-        "GROQ_API_KEY is not set. Add it to backend/.env and restart."
-      );
+    if (!_groq) {
+        if (!process.env.GROQ_API_KEY) {
+            throw new Error(
+                "GROQ_API_KEY is not set. Add it to backend/.env and restart."
+            );
+        }
+        _groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
     }
-    _groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
-  }
-  return _groq;
+    return _groq;
 };
 
 const SYSTEM_PROMPT = `You are a senior software engineer and code intelligence assistant.
@@ -44,29 +44,29 @@ ${question}
 `;
 
 export const askLLM = async (question, context) => {
-  const groq = getGroq();
-  const prompt = buildPrompt(question, context);
+    const groq = getGroq();
+    const prompt = buildPrompt(question, context);
 
-  const callModel = async (model) => {
-    const response = await groq.chat.completions.create({
-      model,
-      messages: [
-        { role: "system", content: SYSTEM_PROMPT },
-        { role: "user", content: prompt },
-      ],
-      temperature: 0.2,
-      max_tokens: 1500,
-    });
-    return response.choices[0].message.content;
-  };
+    const callModel = async (model) => {
+        const response = await groq.chat.completions.create({
+            model,
+            messages: [
+                { role: "system", content: SYSTEM_PROMPT },
+                { role: "user", content: prompt },
+            ],
+            temperature: 0.2,
+            max_tokens: 1500,
+        });
+        return response.choices[0].message.content;
+    };
 
-  try {
-    return await callModel("llama3-70b-8192");
-  } catch (err) {
-    if (err.status === 429 || err.message?.includes("quota") || err.message?.includes("rate")) {
-      console.warn("⚠️  Falling back to mixtral-8x7b-32768");
-      return await callModel("mixtral-8x7b-32768");
+    try {
+        return await callModel("llama3-70b-8192");
+    } catch (err) {
+        if (err.status === 429 || err.message?.includes("quota") || err.message?.includes("rate")) {
+            console.warn("⚠️  Falling back to mixtral-8x7b-32768");
+            return await callModel("mixtral-8x7b-32768");
+        }
+        throw err;
     }
-    throw err;
-  }
 };

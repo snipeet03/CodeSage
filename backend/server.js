@@ -11,6 +11,7 @@ const cors = require("cors");
 const morgan = require("morgan");
 const path = require("path");
 const fs = require("fs");
+const axios = require("axios");
 
 const repoRoutes = require("./routes/repo.routes");
 const queryRoutes = require("./routes/query.routes");
@@ -48,6 +49,12 @@ app.use(errorHandler);
 
 const server = app.listen(PORT, () => {
   console.log(`✅ Backend running at http://localhost:${PORT}`);
+
+  // Silently wake up the RAG service so it’s ready when the first user request arrives
+  const RAG_SERVICE_URL = process.env.RAG_SERVICE_URL || "http://localhost:8000";
+  axios.get(`${RAG_SERVICE_URL}/health`, { timeout: 30_000 })
+    .then(() => console.log("[warm-up] RAG service is awake ✅"))
+    .catch(() => console.log("[warm-up] RAG service is sleeping — will wake on first request"));
 });
 
 server.on("error", (err) => {

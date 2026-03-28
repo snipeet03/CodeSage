@@ -59,7 +59,7 @@ async function loadRepo(req, res) {
   const ragResponse = await axios.post(`${RAG_SERVICE_URL}/index`, {
     repo_path: repoPath,
     repo_name: repoName,
-  });
+  }, { timeout: 120_000 }); // 120s — RAG service may cold-start on Render free tier
 
   return res.json({
     message: "Repository loaded and indexed successfully.",

@@ -21,7 +21,7 @@ async function handleQuery(req, res) {
 
   const ragResponse = await axios.post(`${RAG_SERVICE_URL}/query`, {
     question: question.trim(),
-  });
+  }, { timeout: 120_000 }); // 120s — RAG service may cold-start on Render free tier
 
   return res.json(ragResponse.data);
 }

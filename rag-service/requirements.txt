@@ -26,7 +26,7 @@ langchain-community==0.3.25
 langchain-groq==0.2.5
 langchain-text-splitters==0.3.11
 langchain-core==0.3.83
-langchain-huggingface
+langchain-huggingface==0.3.1
 
 # ── Groq SDK (pulled in by langchain-groq, pinned for stability) ─────────────
 groq==0.13.0
@@ -41,7 +41,7 @@ faiss-cpu==1.8.0
 sentence-transformers==2.7.0
 torch==2.2.2
 transformers==4.40.2
-huggingface-hub==0.23.2
+huggingface-hub==0.36.2
 tokenizers==0.19.1
 
 # ── Pydantic (langchain 0.3.x requires >=2.7.4) ───────────────────────────────

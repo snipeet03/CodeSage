@@ -42,8 +42,17 @@ app.get("/health", (_req, res) => {
 // ── Global error handler ────────────────────────────────────────────────────
 app.use(errorHandler);
 
-app.listen(PORT, () => {
+const server = app.listen(PORT, () => {
   console.log(`✅ Backend running at http://localhost:${PORT}`);
+});
+
+server.on("error", (err) => {
+  if (err.code === "EADDRINUSE") {
+    console.error(`❌ Port ${PORT} is already in use. Close the other process or set a different PORT in backend/.env.`);
+    process.exit(1);
+  }
+  console.error(err);
+  process.exit(1);
 });
 
 module.exports = app;

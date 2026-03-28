@@ -1,5 +1,5 @@
-import React, { useState } from 'react'
-import { api } from '../utils/api'
+import React, { useState, useEffect } from 'react'
+import { api, warmUpBackend } from '../utils/api'
 import styles from './RepoLoader.module.css'
 
 /**
@@ -10,7 +10,10 @@ export default function RepoLoader({ onLoaded }) {
   const [url, setUrl] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
-  const [step, setStep] = useState('')   // cloning | indexing | done
+  const [step, setStep] = useState('')   // waking | cloning | indexing | done
+
+  // Silently wake up the Render backend as soon as the page loads
+  useEffect(() => { warmUpBackend() }, [])
 
   async function handleLoad(e) {
     e.preventDefault()
@@ -18,10 +21,12 @@ export default function RepoLoader({ onLoaded }) {
 
     setError('')
     setLoading(true)
-    setStep('cloning')
+    setStep('waking')
 
     try {
-      setTimeout(() => setStep('indexing'), 3000)
+      // Give the backend a moment to wake up before showing cloning step
+      setTimeout(() => setStep('cloning'), 4000)
+      setTimeout(() => setStep('indexing'), 10000)
       const data = await api.loadRepo(url.trim())
       setStep('done')
 
@@ -31,7 +36,7 @@ export default function RepoLoader({ onLoaded }) {
         chunksCreated: data.indexStatus?.chunks_created ?? '?',
       })
     } catch (err) {
-      setError(err.message || 'Something went wrong. Is the RAG service running?')
+      setError(err.message || 'Could not reach the server. The backend may still be waking up — please try again in 30 seconds.')
       setStep('')
     } finally {
       setLoading(false)
@@ -39,6 +44,7 @@ export default function RepoLoader({ onLoaded }) {
   }
 
   const STEPS = [
+    { key: 'waking',   label: 'Waking up server… (may take ~30s on first use)' },
     { key: 'cloning',  label: 'Cloning repository…' },
     { key: 'indexing', label: 'Indexing & embedding code…' },
     { key: 'done',     label: 'Ready!' },

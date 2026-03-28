@@ -38,6 +38,10 @@ app.use("/api/query", queryRoutes);
 app.get("/health", (_req, res) => {
   res.json({ status: "ok", service: "codebase-explainer-backend" });
 });
+// Also expose under /api/health so the Vercel rewrite proxy can reach it
+app.get("/api/health", (_req, res) => {
+  res.json({ status: "ok", service: "codebase-explainer-backend" });
+});
 
 // ── Global error handler ────────────────────────────────────────────────────
 app.use(errorHandler);

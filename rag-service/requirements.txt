@@ -26,6 +26,7 @@ langchain-community==0.3.25
 langchain-groq==0.2.5
 langchain-text-splitters==0.3.11
 langchain-core==0.3.83
+langchain-huggingface
 
 # ── Groq SDK (pulled in by langchain-groq, pinned for stability) ─────────────
 groq==0.13.0

@@ -36,6 +36,9 @@ app.use("/api/repo", repoRoutes);
 app.use("/api/query", queryRoutes);
 
 // ── Health check ────────────────────────────────────────────────────────────
+app.get("/", (_req, res) => {
+  res.json({ status: "ok", service: "codebase-explainer-backend" });
+});
 app.get("/health", (_req, res) => {
   res.json({ status: "ok", service: "codebase-explainer-backend" });
 });

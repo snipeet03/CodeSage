@@ -65,6 +65,10 @@ app.include_router(query_router, prefix="", tags=["Query"])
 
 
 # ── Health check ────────────────────────────────────────────────────────────
+@app.get("/")
+async def root():
+    return {"status": "ok", "service": "rag-service"}
+
 @app.get("/health")
 async def health():
     return {"status": "ok", "service": "rag-service"}

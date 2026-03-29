@@ -38,10 +38,10 @@ langsmith==0.3.45
 faiss-cpu==1.8.0
 
 # ── Embeddings ────────────────────────────────────────────────────────────────
-sentence-transformers==2.7.0
+sentence-transformers==3.0.1
 torch==2.2.2
-transformers==4.40.2
-huggingface-hub==0.36.2
+transformers==4.44.0
+huggingface-hub==0.24.7
 tokenizers==0.19.1
 
 # ── Pydantic (langchain 0.3.x requires >=2.7.4) ───────────────────────────────

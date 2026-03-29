@@ -44,6 +44,20 @@ app.get("/api/health", (_req, res) => {
   res.json({ status: "ok", service: "codebase-explainer-backend" });
 });
 
+// ── Warmup endpoint — wakes BOTH backend AND RAG service ─────────────────────
+// Frontend calls /api/warmup on page load so both Render free-tier services
+// are awake before the user hits "Load Repo"
+app.get("/api/warmup", async (_req, res) => {
+  const RAG_SERVICE_URL = process.env.RAG_SERVICE_URL || "http://localhost:8000";
+  try {
+    await axios.get(`${RAG_SERVICE_URL}/health`, { timeout: 60_000 });
+    res.json({ backend: "ok", rag: "ok" });
+  } catch (err) {
+    // Still respond OK — backend is alive even if RAG is still waking
+    res.json({ backend: "ok", rag: "waking", detail: err.message });
+  }
+});
+
 // ── Global error handler ────────────────────────────────────────────────────
 app.use(errorHandler);
 

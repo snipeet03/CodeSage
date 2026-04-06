@@ -21,66 +21,22 @@ Instead of manually reading thousands of lines of code, developers can ask natur
 
 ## 🏗️ Architecture
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│                    React Frontend (5173)                    │
-│              Chat, Repository Manager, UI                   │
-└──────────────────────────┬──────────────────────────────────┘
-                          │
-         ┌────────────────┼────────────────┐
-         │                │                │
-┌────────▼────────┐ ┌────▼─────────┐ ┌───▼──────────────┐
-│ Node.js Backend │ │ RAG Service  │ │  FAISS Vector   │
-│ (Express 3000)  │ │ (Python 8000)│ │  Store (Local)  │
-│                 │ │              │ │                 │
-│ • Query Routes  │ │ • Retriever  │ │ • Embeddings    │
-│ • Repo Routes   │ │ • Chunker    │ │ • Index Files   │
-│ • Controllers   │ │ • LLM        │ └─────────────────┘
-│ • Git Service   │ │ • Embedder   │
-└─────────────────┘ └──────────────┘
-```
+![CodeSage System Architecture]("https://res.cloudinary.com/dhjzzee5y/image/upload/v1775452670/Screenshot_2026-04-06_103754_dyvbmm.png")
 
-## 📁 Project Structure
 
-```
-CodeSage/
-├── backend/                    # Node.js server
-│   ├── src/
-│   │   ├── app.js             # Express app setup
-│   │   ├── controllers/        # Request handlers
-│   │   ├── services/           # Business logic
-│   │   ├── routes/             # API endpoints
-│   │   ├── rag/                # RAG pipeline
-│   │   └── utils/              # Utilities
-│   ├── repos/                  # Repository workspace
-│   │   └── snipeet03_potfolio_web/  # Example repo
-│   ├── server.js               # Entry point
-│   └── package.json
-│
-├── frontend/                   # React application
-│   ├── src/
-│   │   ├── components/         # React components
-│   │   ├── pages/              # Page layouts
-│   │   ├── styles/             # Global styles
-│   │   ├── utils/              # API client
-│   │   ├── App.jsx
-│   │   └── main.jsx
-│   ├── vite.config.js
-│   └── package.json
-│
-├── rag-service/                # Python RAG service
-│   ├── main.py                 # FastAPI app
-│   ├── routers/                # API routes
-│   ├── services/               # RAG components
-│   │   ├── chunker.py          # Text chunking
-│   │   ├── embedder.py         # Embedding generation
-│   │   ├── llm.py              # LLM integration
-│   │   ├── retriever.py        # Context retrieval
-│   │   └── vector_store.py     # FAISS management
-│   ├── utils/                  # Configuration
-│   ├── faiss_indexes/          # Vector indexes
-│   ├── requirements.txt
-│   └── pyproject.toml
-│
-└── README.md                   # This file
-```
+**System Overview:**
+
+The CodeSage architecture consists of three main components:
+
+1. **React Frontend (Port 5173)** — User-facing chat interface and repository manager
+2. **Node.js Backend (Port 3000)** — API server handling queries and repository management
+3. **Python RAG Service (Port 8000)** — Retrieval-Augmented Generation engine with FAISS vector store
+
+**Data Flow:**
+- Frontend sends user queries to Backend
+- Backend forwards requests to RAG Service
+- RAG Service retrieves relevant context from FAISS Vector Store
+- LLM processes context and generates responses
+- Results flow back through Backend to Frontend for display
+
+

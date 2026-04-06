@@ -21,7 +21,7 @@ Instead of manually reading thousands of lines of code, developers can ask natur
 
 ## 🏗️ Architecture
 
-![CodeSage System Architecture]("https://res.cloudinary.com/dhjzzee5y/image/upload/v1775452670/Screenshot_2026-04-06_103754_dyvbmm.png")
+![CodeSage System Architecture](https://res.cloudinary.com/dhjzzee5y/image/upload/v1775452670/Screenshot_2026-04-06_103754_dyvbmm.png)
 
 
 **System Overview:**

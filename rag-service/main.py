@@ -3,6 +3,9 @@ main.py — FastAPI application entry point for the RAG service.
 Exposes /index and /query endpoints.
 """
 
+from dotenv import load_dotenv
+load_dotenv()  # Load environment variables FIRST before any other imports
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager

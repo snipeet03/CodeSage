@@ -4,7 +4,8 @@
  * Includes a long timeout to handle Render free-tier cold starts (up to 60s).
  */
 
-const BASE_URL = '/api'
+const BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api'
+const API_BASE = BASE_URL.endsWith('/') ? BASE_URL.slice(0, -1) : BASE_URL
 
 // Render free tier can take 30-60s to wake up — use a generous timeout
 const TIMEOUT_MS = 90_000
@@ -20,7 +21,7 @@ function fetchWithTimeout(url, options = {}) {
 async function post(path, body) {
     let res
     try {
-        res = await fetchWithTimeout(`${BASE_URL}${path}`, {
+        res = await fetchWithTimeout(`${API_BASE}${path}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(body),
@@ -46,7 +47,7 @@ async function post(path, body) {
  */
 export async function warmUpBackend() {
     try {
-        await fetch('/api/warmup', { method: 'GET' })
+        await fetch(`${API_BASE}/warmup`, { method: 'GET' })
     } catch (_) {
         // ignore — best-effort only
     }

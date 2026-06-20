@@ -57,7 +57,7 @@ The frontend is deployed at https://code-sage-orcin.vercel.app/ and the backend 
 3. Deploy the `backend` folder to Vercel as a separate project.
 4. Set `RAG_SERVICE_URL` in the Vercel backend environment to the Render URL from step 2.
 5. Deploy the `frontend` folder to Vercel.
-6. Keep [frontend/vercel.json](frontend/vercel.json) pointing `/api/:path*` to the backend Vercel domain, so the frontend talks to the backend and the backend talks to Render.
+6. Keep [frontend/vercel.json](frontend/vercel.json) pointing `/api/:path*` to the Render backend URL so the frontend can reach the backend in production.
 7. Open the frontend at https://code-sage-orcin.vercel.app/ and verify `/api/warmup`, `/api/repo/load`, and `/api/query` are reaching the backend.
 
 Flow:

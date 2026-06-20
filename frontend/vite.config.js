@@ -7,7 +7,7 @@ export default defineConfig({
     port: 5173,
     proxy: {
       '/api': {
-        target: 'https://backend-v5h4.onrender.com',
+        target: 'https://codesage-yxza.onrender.com',
         changeOrigin: true,
       }
     }

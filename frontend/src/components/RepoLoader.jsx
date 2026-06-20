@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { api } from '../utils/api'
 
 const PHASES = {
   idle:     { label: '🚀 Analyze Repo',   progress: 0   },
@@ -31,52 +32,21 @@ export default function RepoLoader({ onIndexed }) {
     setLog([])
 
     try {
-      // ── Phase 1: Clone ────────────────────────────────────────────
       setPhase('cloning')
-      addLog('Connecting to GitHub…')
+      addLog('Connecting to backend…')
+      const data = await api.loadRepo(url)
 
-      const r1 = await fetch('/api/load-repo', {
-        method:  'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({ repoUrl: url }),
-      })
-      if (!r1.ok) {
-        const text = await r1.text();
-        try {
-          const json = JSON.parse(text);
-          throw new Error(json.error || `Server error: ${r1.status}`);
-        } catch(e) {
-          throw new Error(`Server returned an error (${r1.status}). Please try again in 30 seconds (backend may be waking up).`);
-        }
-      }
-      const d1 = await r1.json()
-      addLog(`✓ Cloned ${d1.repo.repo} (${d1.repo.fileCount} files found)`)
-
-      // ── Phase 2: Index ────────────────────────────────────────────
+      addLog(`✓ Loaded ${data.repoName}`)
       setPhase('indexing')
-      addLog('Parsing source files…')
-      addLog('Generating embeddings…')
-      addLog('Building vector index…')
-
-      const r2 = await fetch('/api/index-repo', {
-        method:  'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({ repoUrl: url }),
-      })
-      if (!r2.ok) {
-        const text2 = await r2.text();
-        try {
-          const json2 = JSON.parse(text2);
-          throw new Error(json2.error || `Server error: ${r2.status}`);
-        } catch(e) {
-          throw new Error(`Server returned an error (${r2.status}). Please try again.`);
-        }
-      }
-      const d2 = await r2.json()
-
-      addLog(`✓ Indexed ${d2.stats.filesProcessed} files → ${d2.stats.totalChunks} chunks`)
+      addLog('Indexing completed…')
       setPhase('done')
-      onIndexed(d1.repo, d2.stats)
+      onIndexed(
+        { repo: data.repoName, fileCount: data.indexStatus?.files_loaded ?? '?' },
+        {
+          filesProcessed: data.indexStatus?.files_loaded ?? '?',
+          totalChunks: data.indexStatus?.chunks_created ?? '?',
+        },
+      )
 
     } catch (e) {
       setPhase('error')

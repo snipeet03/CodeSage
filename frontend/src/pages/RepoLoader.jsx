@@ -24,9 +24,6 @@ export default function RepoLoader({ onLoaded }) {
     setStep('waking')
 
     try {
-      // Give the backend a moment to wake up before showing cloning step
-      setTimeout(() => setStep('cloning'), 4000)
-      setTimeout(() => setStep('indexing'), 10000)
       const data = await api.loadRepo(url.trim())
       setStep('done')
 
